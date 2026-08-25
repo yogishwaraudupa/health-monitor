@@ -8,9 +8,12 @@ A beautiful, **offline-first** personal health monitoring dashboard. Track your 
 
 - **📊 Dashboard** — stat cards for Heart Rate, Blood Pressure, Weight, Sleep, Water & Steps, with day-over-day deltas
 - **🎯 Daily goals** — progress bars for hydration (8 glasses), sleep (8 hrs) and steps (10,000)
+- **🌿 Daily Wellbeing** — rotating positive mental-health quotes plus a personalized, emoji-toned suggestion computed *offline* from your own data (stress check-ins, sleep hygiene, hydration nudges, supportive messages)
 - **🔥 Streaks** — keeps you motivated with a daily logging streak counter
 - **📈 Trends** — interactive Chart.js line charts over 7 / 14 / 30 / 90-day ranges with avg / min / max summaries
 - **🕘 History** — searchable table of every entry with edit & delete
+- **⚖️ BMI** — body-mass-index card with category badge (Underweight / Healthy / Overweight / Obese) and your healthy weight range for the height you set
+- **🔔 Daily reminder** — optional browser notification around 8 PM when today's entry is still missing (once per day)
 - **💾 Your data, your device** — persisted in `localStorage`; export/import as JSON or CSV anytime
 - **🎲 Sample data** — one click generates 30 days of realistic demo data
 - **🌗 Light & dark themes**, fully responsive layout
@@ -54,6 +57,7 @@ health-monitor-app/
 ├── index.html          # App shell (single page)
 ├── css/styles.css      # Design system + components
 ├── js/app.js           # State, storage, rendering, charts
+├── test/csv-import.test.mjs  # Node test for the CSV import pipeline
 ├── vendor/chart.umd.min.js
 ├── vercel.json         # Security headers + clean URLs
 ├── LICENSE             # MIT

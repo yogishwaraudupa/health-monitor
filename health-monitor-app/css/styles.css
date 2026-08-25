@@ -184,6 +184,33 @@ dialog.dialog::backdrop { background: rgba(2, 8, 20, 0.55); backdrop-filter: blu
 /* ---------- Footer ---------- */
 .app-footer { padding: 1.2rem 0 2rem; text-align: center; color: var(--muted); font-size: 0.82rem; border-top: 1px solid var(--border); }
 
+/* ---------- BMI ---------- */
+.bmi-card { padding: 1.15rem 1.25rem; margin-top: 1rem; }
+.bmi-head { display: flex; justify-content: space-between; align-items: center; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 0.55rem; }
+.bmi-card h2 { font-size: 1rem; }
+.bmi-height { font-size: 0.78rem; font-weight: 600; color: var(--muted); display: flex; align-items: center; gap: 0.45rem; }
+.bmi-height input { width: 84px; padding: 0.35rem 0.6rem; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--text); font-weight: 500; }
+.bmi-height input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--ring); }
+.bmi-main { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.3rem; }
+.delta.warn { background: rgba(245, 158, 11, 0.15); color: #d97706; }
+[data-theme="dark"] .delta.warn { color: #fbbf24; }
+
+/* ---------- Reminder toggle ---------- */
+#reminder-toggle.off { opacity: 0.55; }
+#reminder-toggle.on { border-color: var(--primary); background: var(--primary-soft); }
+
+/* ---------- History note indicator ---------- */
+.note-ind { margin-left: 0.3rem; font-size: 0.85rem; cursor: help; }
+
+/* ---------- Daily Wellbeing ---------- */
+.wb-card h2 { font-size: 1rem; margin-bottom: 0.55rem; }
+.wb-quote { border-left: 3px solid var(--grad-a); padding: 0.25rem 0 0.25rem 0.85rem; margin-bottom: 0.8rem; }
+.wb-quote p { font-size: 0.95rem; font-style: italic; font-weight: 500; }
+.wb-quote figcaption { font-size: 0.78rem; margin-top: 0.15rem; }
+.wb-tip { display: flex; gap: 0.6rem; align-items: flex-start; background: var(--primary-soft); border-radius: 12px; padding: 0.7rem 0.9rem; }
+.wb-tip #wb-tip-icon { font-size: 1.25rem; line-height: 1.4; }
+.wb-tip p { font-size: 0.9rem; font-weight: 500; }
+
 /* ---------- Responsive ---------- */
 @media (max-width: 720px) {
   .stat-grid { grid-template-columns: repeat(2, 1fr); }

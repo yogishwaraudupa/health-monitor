@@ -19,6 +19,7 @@
         <span class="brand-text">Health<span>Monitor</span></span>
       </a>
       <div class="header-actions">
+        <button id="reminder-toggle" class="icon-btn" aria-label="Toggle daily log reminder" aria-pressed="false" title="Daily log reminder">🔔</button>
         <button id="theme-toggle" class="icon-btn" aria-label="Toggle color theme">🌙</button>
         <button id="add-entry-btn" class="btn btn-primary">＋ Add Entry</button>
       </div>
@@ -59,6 +60,28 @@
         <div id="goals-list" class="goals-list"></div>
         <p id="goals-hint"></p>
       </div>
+
+      <div class="card wb-card">
+        <h2>Daily Wellbeing 🌿</h2>
+        <figure class="wb-quote">
+          <p id="wb-quote-text"></p>
+          <figcaption id="wb-quote-author" class="muted"></figcaption>
+        </figure>
+        <div class="wb-tip">
+          <span id="wb-tip-icon" aria-hidden="true"></span>
+          <p id="wb-tip-text"></p>
+        </div>
+      </div>
+
+      <div class="card bmi-card">
+        <div class="bmi-head">
+          <h2>Body Mass Index</h2>
+          <label class="bmi-height">Height
+            <input type="number" id="height-input" min="100" max="250" step="0.5" placeholder="cm" inputmode="decimal" />
+          </label>
+        </div>
+        <div id="bmi-body"></div>
+      </div>
     </section>
 
     <!-- ======================= TRENDS ======================= -->
@@ -84,7 +107,7 @@
           <button class="btn btn-ghost" id="export-json">⬇ JSON</button>
           <label class="btn btn-ghost">
             ⬆ Import
-            <input type="file" id="import-file" accept=".json,application/json" hidden />
+            <input type="file" id="import-file" accept=".json,.csv,application/json,text/csv" hidden />
           </label>
         </div>
       </div>
@@ -140,7 +163,7 @@
         <label class="field span-2">Steps
           <input type="number" id="f-steps" min="0" max="100000" step="1" inputmode="numeric" placeholder="10000" />
         </label>
-        <label class="field span-2">Mood
+        <label class="field">Mood
           <select id="f-mood">
             <option value="">—</option>
             <option value="great">🤩 Great</option>
@@ -148,6 +171,16 @@
             <option value="ok">😐 Okay</option>
             <option value="low">😕 Low</option>
             <option value="bad">😞 Bad</option>
+          </select>
+        </label>
+        <label class="field">Stress level
+          <select id="f-stress">
+            <option value="">—</option>
+            <option value="1">😌 Calm</option>
+            <option value="2">🙂 Relaxed</option>
+            <option value="3">😐 Okay</option>
+            <option value="4">😣 Stressed</option>
+            <option value="5">😫 Very stressed</option>
           </select>
         </label>
         <label class="field span-2">Notes
