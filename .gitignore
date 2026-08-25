@@ -2,6 +2,9 @@
 *.class
 *.jar
 
+# Compiled binaries
+*.exe
+
 # Temporary diagnostic/log files
 diag*.txt
 *_log.txt
