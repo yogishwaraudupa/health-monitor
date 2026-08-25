@@ -1,0 +1,11 @@
+# Compiled Java artifacts
+*.class
+*.jar
+
+# Temporary diagnostic/log files
+diag*.txt
+*_log.txt
+run_output.txt
+edge.txt
+gh_check.txt
+ginit.txt
