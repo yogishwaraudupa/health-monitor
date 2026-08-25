@@ -73,6 +73,38 @@
         </div>
       </div>
 
+      <div class="card ai-card">
+        <div class="ai-head">
+          <h2>Condition Summary</h2>
+          <button id="ai-settings-btn" class="icon-btn" title="AI settings" aria-label="AI settings">⚙️</button>
+        </div>
+        <p id="ai-passage" class="ai-passage muted"></p>
+        <div class="ai-actions">
+          <button class="btn btn-primary" id="ai-generate">✨ Generate passage</button>
+          <span id="ai-mode-chip" class="ai-chip"></span>
+          <span id="ai-source" class="muted"></span>
+        </div>
+        <div id="ai-settings" class="ai-settings" hidden>
+          <p class="muted">Optional: plug in your own AI key for richer passages. Only anonymous numeric stats are sent — never your notes. Free keys at console.groq.com.</p>
+          <div class="ai-grid">
+            <label>Provider
+              <select id="ai-provider">
+                <option value="groq">Groq (free tier)</option>
+                <option value="openai">OpenAI</option>
+                <option value="custom">Custom (OpenAI-compatible)</option>
+              </select>
+            </label>
+            <label>Model <input id="ai-model" type="text" placeholder="default if empty" /></label>
+            <label class="ai-span2">Base URL <input id="ai-baseurl" type="text" placeholder="https://…/v1 (custom provider only)" /></label>
+            <label class="ai-span2">API key <input id="ai-key" type="password" placeholder="sk-…" autocomplete="off" /></label>
+          </div>
+          <div class="dialog-actions">
+            <button type="button" class="btn btn-ghost" id="ai-cancel">Cancel</button>
+            <button type="button" class="btn btn-primary" id="ai-save">Save</button>
+          </div>
+        </div>
+      </div>
+
       <div class="card bmi-card">
         <div class="bmi-head">
           <h2>Body Mass Index</h2>

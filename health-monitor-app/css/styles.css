@@ -211,10 +211,27 @@ dialog.dialog::backdrop { background: rgba(2, 8, 20, 0.55); backdrop-filter: blu
 .wb-tip #wb-tip-icon { font-size: 1.25rem; line-height: 1.4; }
 .wb-tip p { font-size: 0.9rem; font-weight: 500; }
 
+/* ---------- Condition Summary (offline engine + optional AI) ---------- */
+.ai-card h2 { font-size: 1rem; }
+.ai-head { display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem; }
+.ai-head .icon-btn { width: 34px; height: 34px; font-size: 0.95rem; border-radius: 10px; }
+.ai-passage { font-size: 0.92rem; line-height: 1.65; margin-bottom: 0.7rem; }
+.ai-actions { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; }
+.ai-chip { font-size: 0.72rem; font-weight: 700; border: 1px solid var(--border); border-radius: 99px; padding: 0.18rem 0.6rem; color: var(--muted); white-space: nowrap; }
+#ai-source { font-size: 0.78rem; }
+.ai-settings { margin-top: 0.9rem; border-top: 1px dashed var(--border); padding-top: 0.8rem; font-size: 0.82rem; display: flex; flex-direction: column; gap: 0.6rem; }
+.ai-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem; }
+.ai-grid label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.72rem; font-weight: 600; color: var(--muted); }
+.ai-grid input, .ai-grid select { padding: 0.45rem 0.6rem; border-radius: 9px; border: 1px solid var(--border); background: transparent; color: var(--text); font-weight: 500; }
+.ai-grid input:focus, .ai-grid select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--ring); }
+.ai-grid .ai-span2 { grid-column: 1 / -1; }
+.ai-settings .dialog-actions { justify-content: flex-end; gap: 0.5rem; margin-top: 0.2rem; }
+
 /* ---------- Responsive ---------- */
 @media (max-width: 720px) {
   .stat-grid { grid-template-columns: repeat(2, 1fr); }
   .form-grid { grid-template-columns: 1fr; }
+  .ai-grid { grid-template-columns: 1fr; }
   .tab-nav { width: 100%; justify-content: space-around; }
   .goal-row { grid-template-columns: 92px 1fr auto; gap: 0.55rem; }
   .header-inner { padding: 0.65rem 0; }

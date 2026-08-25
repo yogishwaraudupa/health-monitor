@@ -64,4 +64,23 @@ assert(quoteOfTheDay().text === q.text, 'quote is stable within the same day');
 const tip = wellbeingTip(); // empty store -> welcome tip
 assert(tip && typeof tip.text === 'string' && tip.icon === '👋', 'welcome tip on empty state');
 
+// -- Condition summary passages --
+const sampleStats = {
+  periodDays: 14, entryCount: 10, todayLogged: true, streak: 4,
+  heartRate: { avg: 72.3, min: 64, max: 85 },
+  bloodPressure: { sysAvg: 124.5, diaAvg: 79 },
+  weight: { latest: 70.2, earliest: 71.0 },
+  sleepAvg: 7.2, waterAvg: 6.4, stepsAvg: 8200, stressAvg: 2.5,
+  moodTally: { good: 5, ok: 3, low: 2 }, moodTop: 'good',
+  // GOALS is a const inside app.js (not visible to this module), so inline it
+  goals: { waterGlasses: 8, steps: 10000, sleepHours: 8 },
+};
+const passage = localPassage(sampleStats);
+console.log('sample passage:', passage);
+assert(typeof passage === 'string' && passage.length > 200, 'offline passage is substantial');
+assert(passage.includes('bpm') && passage.includes('mmHg'), 'passage includes real numbers');
+assert(passage.includes('not medical advice'), 'non-diagnostic disclaimer present');
+const emptyPassage = localPassage({ ...sampleStats, entryCount: 0 });
+assert(emptyPassage.includes('Log a few days'), 'friendly prompt when no data');
+
 console.log('ALL TESTS PASSED ✅');

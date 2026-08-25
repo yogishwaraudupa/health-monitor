@@ -9,6 +9,15 @@
 const STORAGE_KEY = 'hm.entries.v1';
 const THEME_KEY = 'hm.theme';
 const TAB_KEY = 'hm.tab';
+const AI_CFG_KEY = 'hm.ai.v1';       // optional user-provided AI credentials
+const PASSAGE_KEY = 'hm.passage.v1'; // last generated condition summary
+
+// Sent along with anonymous numeric stats when the user opts into AI summaries
+const AI_SYSTEM_PROMPT =
+  'You are a kind, encouraging health companion inside a private vitals tracker. ' +
+  'Using ONLY the JSON statistics provided, write ONE short paragraph (max 110 words) ' +
+  'describing how the person has been doing recently, include one gentle suggestion, ' +
+  'and end with a fitting emoji. Plain language. Never diagnose. No markdown.';
 
 const GOALS = { waterGlasses: 8, steps: 10000, sleepHours: 8 };
 
@@ -939,6 +948,178 @@ function renderWellbeing() {
   $('#wb-tip-text').textContent = tip.text;
 }
 
+/* ---------------- Condition summary (offline engine + optional AI) ---------------- */
+// Aggregates the last `days` days into anonymous numeric stats. Raw notes are
+// intentionally excluded so they are never sent to any AI provider.
+function collectStats(days = 14) {
+  const since = isoDaysAgo(days - 1);
+  const scoped = sortedNewestFirst().filter((e) => e.date >= since); // newest first
+  const vals = (k) => scoped.map((e) => e[k]).filter((v) => v != null && Number.isFinite(Number(v))).map(Number);
+  const avgOf = (a) => (a.length ? +(a.reduce((x, y) => x + y, 0) / a.length).toFixed(1) : null);
+
+  const hr = vals('heartRate');
+  const weight = vals('weight'); // [newest … oldest]
+  const moodTally = {};
+  scoped.forEach((e) => { if (e.mood) moodTally[e.mood] = (moodTally[e.mood] || 0) + 1; });
+  const moodTop = Object.keys(moodTally).sort((a, b) => moodTally[b] - moodTally[a])[0] || null;
+
+  return {
+    periodDays: days,
+    entryCount: scoped.length,
+    todayLogged: Boolean(getEntryForDate(todayISO())),
+    streak: computeStreak(),
+    heartRate: { avg: avgOf(hr), min: hr.length ? Math.min(...hr) : null, max: hr.length ? Math.max(...hr) : null },
+    bloodPressure: { sysAvg: avgOf(vals('systolic')), diaAvg: avgOf(vals('diastolic')) },
+    weight: { latest: weight[0] ?? null, earliest: weight[weight.length - 1] ?? null },
+    sleepAvg: avgOf(vals('sleepHours')),
+    waterAvg: avgOf(vals('waterGlasses')),
+    stepsAvg: avgOf(vals('steps')),
+    stressAvg: avgOf(vals('stress')),
+    moodTally,
+    moodTop,
+    goals: GOALS,
+  };
+}
+
+// Template-based narrative — always available, zero network, zero cost.
+function localPassage(s) {
+  if (!s.entryCount) {
+    return 'Log a few days of vitals and a warm summary of your condition will appear here — written entirely on your device, no internet required.';
+  }
+  const p = [];
+  p.push(`Over the last ${s.periodDays} days you logged ${s.entryCount} ${s.entryCount === 1 ? 'entry' : 'entries'}${s.streak ? `, keeping a 🔥 ${s.streak}-day streak going` : ''}.`);
+
+  if (s.heartRate.avg != null) {
+    const inRange = s.heartRate.avg >= 60 && s.heartRate.avg <= 100;
+    p.push(`Your average heart rate was ${fmtNum(s.heartRate.avg)} bpm (${inRange ? 'comfortably within the typical resting range' : 'a little outside the usual 60–100 resting range'})${s.heartRate.min != null ? `, ranging from ${fmtNum(s.heartRate.min)} to ${fmtNum(s.heartRate.max)}` : ''}.`);
+  }
+  if (s.bloodPressure.sysAvg != null) {
+    const sy = s.bloodPressure.sysAvg;
+    const di = s.bloodPressure.diaAvg;
+    const word = (sy < 120 && di < 80) ? 'which looks excellent'
+      : sy < 130 ? 'which looks good'
+      : (sy < 140 || di < 90) ? 'which trends slightly elevated'
+      : 'which trends high';
+    p.push(`Blood pressure averaged ${fmtNum(sy)}/${fmtNum(di)} mmHg, ${word}.`);
+  }
+  if (s.weight.latest != null && s.weight.earliest != null) {
+    const d = +(s.weight.latest - s.weight.earliest).toFixed(1);
+    p.push(d === 0 ? 'Your weight held steady.' : `Your weight drifted ${fmtNum(Math.abs(d), 1)} kg ${d < 0 ? 'down' : 'up'}, currently ${fmtNum(s.weight.latest, 1)} kg.`);
+  }
+  if (s.sleepAvg != null) p.push(`Sleep averaged ${fmtNum(s.sleepAvg, 1)} hours ${s.sleepAvg >= s.goals.sleepHours ? '— hitting your rest goal 💤' : '— a bit more shut-eye would help 😴'}.`);
+  if (s.waterAvg != null) p.push(`Hydration averaged ${fmtNum(s.waterAvg)} glasses a day ${s.waterAvg >= s.goals.waterGlasses ? '— nicely done 💧' : '— keeping a bottle within reach makes it easier 💧'}.`);
+  if (s.stepsAvg != null) p.push(`Steps averaged ${fmtNum(s.stepsAvg)} per day ${s.stepsAvg >= s.goals.steps ? '— a genuinely active routine 🏃' : '— every extra stroll adds up 🚶'}.`);
+  if (s.moodTop) {
+    p.push(`Your most common mood was ${MOODS[s.moodTop] || ''} "${s.moodTop}"${s.stressAvg != null ? `, with stress averaging ${fmtNum(s.stressAvg, 1)} out of 5` : ''}.`);
+  }
+  p.push('Remember: this is a friendly overview, not medical advice — and simply showing up to track daily is already a win! 🌟');
+  return p.join(' ');
+}
+
+/* --- Optional AI mode: OpenAI-compatible chat completions (Groq/OpenAI/custom) --- */
+const AI_ENDPOINTS = {
+  groq: 'https://api.groq.com/openai/v1/chat/completions',
+  openai: 'https://api.openai.com/v1/chat/completions',
+};
+const AI_DEFAULT_MODELS = { groq: 'llama-3.3-70b-versatile', openai: 'gpt-4o-mini', custom: '' };
+
+function getAICfg() {
+  const base = { provider: 'groq', key: '', model: '', baseUrl: '' };
+  try { return { ...base, ...(JSON.parse(localStorage.getItem(AI_CFG_KEY)) || {}) }; }
+  catch { return base; }
+}
+
+async function requestAIPassage(stats) {
+  const cfg = getAICfg();
+  const url = cfg.provider === 'custom'
+    ? (cfg.baseUrl || '').replace(/\/+$/, '') + '/chat/completions'
+    : AI_ENDPOINTS[cfg.provider];
+  const model = cfg.model || AI_DEFAULT_MODELS[cfg.provider];
+  if (!url || !model || !cfg.key) throw new Error('ai-not-configured');
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${cfg.key}` },
+    body: JSON.stringify({
+      model,
+      temperature: 0.7,
+      max_tokens: 320,
+      messages: [
+        { role: 'system', content: AI_SYSTEM_PROMPT },
+        { role: 'user', content: JSON.stringify(stats) },
+      ],
+    }),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  const text = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+  if (!text) throw new Error('empty response');
+  return text.trim();
+}
+
+async function onGenerateSummary(btn) {
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ Writing…';
+  try {
+    const stats = collectStats();
+    let text = null;
+    let source = '';
+    const cfg = getAICfg();
+    if (cfg.key) {
+      try {
+        text = await requestAIPassage(stats);
+        source = `✨ AI · ${cfg.provider}`;
+      } catch {
+        toast('AI unreachable — wrote the offline summary instead.', 'info');
+      }
+    }
+    if (!text) { text = localPassage(stats); source = '📴 offline engine'; }
+
+    $('#ai-passage').textContent = text;
+    $('#ai-source').textContent = source;
+    localStorage.setItem(PASSAGE_KEY, JSON.stringify({ text, source, at: todayISO() }));
+    toast('Passage ready 📝');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = original;
+  }
+}
+
+function restorePassage() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PASSAGE_KEY));
+    if (saved && saved.text) {
+      $('#ai-passage').textContent = saved.text;
+      $('#ai-source').textContent = `${saved.source} · ${fmtDate(saved.at)}`;
+    }
+  } catch { /* ignore corrupt cache */ }
+  const cfg = getAICfg();
+  $('#ai-mode-chip').textContent = cfg.key ? `✨ AI: ${cfg.provider}` : '📴 offline mode';
+}
+
+function openAISettings() {
+  const c = getAICfg();
+  $('#ai-provider').value = c.provider;
+  $('#ai-key').value = c.key;
+  $('#ai-model').value = c.model;
+  $('#ai-baseurl').value = c.baseUrl;
+  $('#ai-settings').hidden = false;
+}
+
+function saveAISettings() {
+  const cfg = {
+    provider: $('#ai-provider').value,
+    key: $('#ai-key').value.trim(),
+    model: $('#ai-model').value.trim(),
+    baseUrl: $('#ai-baseurl').value.trim(),
+  };
+  localStorage.setItem(AI_CFG_KEY, JSON.stringify(cfg));
+  $('#ai-settings').hidden = true;
+  $('#ai-mode-chip').textContent = cfg.key ? `✨ AI: ${cfg.provider}` : '📴 offline mode';
+  toast(cfg.key ? 'AI settings saved ✅' : 'AI off — offline summaries only 📴');
+}
+
 /* ---------------- Render all ---------------- */
 function renderAll() {
   renderDashboard();
@@ -990,6 +1171,12 @@ function wireEvents() {
   // BMI height setting
   $('#height-input').addEventListener('change', onHeightChange);
 
+  // Condition summary (offline engine + optional AI)
+  $('#ai-generate').addEventListener('click', (ev) => { void onGenerateSummary(ev.currentTarget); });
+  $('#ai-settings-btn').addEventListener('click', openAISettings);
+  $('#ai-cancel').addEventListener('click', () => { $('#ai-settings').hidden = true; });
+  $('#ai-save').addEventListener('click', saveAISettings);
+
   // Stat card → jump to that metric's trend
   const openTrend = (metricId) => {
     if (!METRICS.some((m) => m.id === metricId)) return;
@@ -1025,6 +1212,7 @@ function init() {
   renderWellbeing();
   renderBMI();
   renderHistory();
+  restorePassage();
 
   // Restore the last active tab
   const savedTab = localStorage.getItem(TAB_KEY);

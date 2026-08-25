@@ -9,6 +9,7 @@ A beautiful, **offline-first** personal health monitoring dashboard. Track your 
 - **📊 Dashboard** — stat cards for Heart Rate, Blood Pressure, Weight, Sleep, Water & Steps, with day-over-day deltas
 - **🎯 Daily goals** — progress bars for hydration (8 glasses), sleep (8 hrs) and steps (10,000)
 - **🌿 Daily Wellbeing** — rotating positive mental-health quotes plus a personalized, emoji-toned suggestion computed *offline* from your own data (stress check-ins, sleep hygiene, hydration nudges, supportive messages)
+- **📝 Condition summary** — one tap writes a narrative passage about your recent condition: fully offline by default, or plug in your own Groq/OpenAI-compatible API key for AI-written versions (only anonymous numeric stats are sent — never your notes)
 - **🔥 Streaks** — keeps you motivated with a daily logging streak counter
 - **📈 Trends** — interactive Chart.js line charts over 7 / 14 / 30 / 90-day ranges with avg / min / max summaries
 - **🕘 History** — searchable table of every entry with edit & delete
@@ -66,7 +67,7 @@ health-monitor-app/
 
 ## 🔒 Privacy
 
-There is **no backend, no analytics, no cookies**. Entries live in your browser's `localStorage` and are never transmitted anywhere.
+There is **no backend, no analytics, no cookies**. Entries live in your browser's `localStorage` and are never transmitted anywhere. The optional AI passage mode is the single exception *you* control: it sends only anonymous numeric summaries (never raw notes) to the provider whose API key you supply.
 
 ## 📄 License
 
