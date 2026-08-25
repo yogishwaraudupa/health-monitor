@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Health Monitor · Track Your Vitals</title>
+  <meta name="description" content="Health Monitor — a private, offline-first dashboard to track heart rate, blood pressure, weight, sleep, hydration and steps." />
+  <meta name="theme-color" content="#059669" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23ef4444' d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/></svg>" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="container header-inner">
+      <a class="brand" href="#" aria-label="Health Monitor home">
+        <span class="brand-icon" aria-hidden="true">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        </span>
+        <span class="brand-text">Health<span>Monitor</span></span>
+      </a>
+      <div class="header-actions">
+        <button id="theme-toggle" class="icon-btn" aria-label="Toggle color theme">🌙</button>
+        <button id="add-entry-btn" class="btn btn-primary">＋ Add Entry</button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="container tab-nav" role="tablist" aria-label="Sections">
+    <button class="tab-btn active" data-tab="dashboard" role="tab" aria-selected="true">Dashboard</button>
+    <button class="tab-btn" data-tab="trends" role="tab" aria-selected="false">Trends</button>
+    <button class="tab-btn" data-tab="history" role="tab" aria-selected="false">History</button>
+  </nav>
+
+  <main class="container">
+    <!-- ======================= DASHBOARD ======================= -->
+    <section id="view-dashboard" class="view" role="tabpanel">
+      <div class="welcome-row">
+        <div>
+          <h1 id="greeting">Hello 👋</h1>
+          <p class="muted" id="today-date"></p>
+        </div>
+        <span id="streak-chip" class="streak-chip" hidden></span>
+      </div>
+
+      <div id="dash-empty" class="card empty-state" hidden>
+        <p class="empty-art" aria-hidden="true">🩺</p>
+        <h2>Welcome to Health Monitor</h2>
+        <p>Log your vitals daily to unlock trends, goals and streaks.<br />Your data never leaves this browser — 100% private.</p>
+        <div class="empty-actions">
+          <button class="btn btn-primary" id="dash-empty-add">＋ Add first entry</button>
+          <button class="btn btn-ghost" id="dash-sample">Load sample data</button>
+        </div>
+      </div>
+
+      <div id="stat-grid" class="stat-grid"></div>
+
+      <div class="card goals-card">
+        <h2>Today's Goals</h2>
+        <div id="goals-list" class="goals-list"></div>
+        <p id="goals-hint"></p>
+      </div>
+    </section>
+
+    <!-- ======================= TRENDS ======================= -->
+    <section id="view-trends" class="view" role="tabpanel" hidden>
+      <div class="trends-toolbar">
+        <div id="metric-chips" class="chips" role="group" aria-label="Metric"></div>
+        <div id="range-chips" class="chips" role="group" aria-label="Range"></div>
+      </div>
+      <div class="card chart-card">
+        <canvas id="trend-chart" aria-label="Metric trend chart" role="img"></canvas>
+      </div>
+      <div id="summary-cards" class="summary-row"></div>
+    </section>
+
+    <!-- ======================= HISTORY ======================= -->
+    <section id="view-history" class="view" role="tabpanel" hidden>
+      <div class="history-toolbar" id="history-toolbar">
+        <div class="search-box">
+          <input id="search-input" type="search" placeholder="Search notes or dates…" aria-label="Search entries" />
+        </div>
+        <div class="toolbar-actions">
+          <button class="btn btn-ghost" id="export-csv">⬇ CSV</button>
+          <button class="btn btn-ghost" id="export-json">⬇ JSON</button>
+          <label class="btn btn-ghost">
+            ⬆ Import
+            <input type="file" id="import-file" accept=".json,application/json" hidden />
+          </label>
+        </div>
+      </div>
+
+      <div class="card table-card">
+        <div class="table-scroll">
+          <table id="history-table">
+            <thead>
+              <tr>
+                <th>Date</th><th>❤️ HR</th><th>🩸 BP</th><th>⚖️ Weight</th>
+                <th>😴 Sleep</th><th>💧 Water</th><th>🏃 Steps</th><th>Mood</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="history-body"></tbody>
+          </table>
+        </div>
+        <div id="empty-state" class="empty-state" hidden>
+          <p class="empty-art" aria-hidden="true">📋</p>
+          <h2>No entries yet</h2>
+          <p>Start tracking to build your history.</p>
+          <div class="empty-actions"><button class="btn btn-primary" id="empty-add">＋ Add your first entry</button></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ======================= ADD / EDIT DIALOG ======================= -->
+  <dialog id="entry-dialog" class="dialog" aria-labelledby="dialog-title">
+    <form id="entry-form" novalidate>
+      <h2 id="dialog-title">Add entry</h2>
+      <div class="form-grid">
+        <label class="field span-2">Date *
+          <input type="date" id="f-date" required />
+        </label>
+        <label class="field">Heart rate (bpm)
+          <input type="number" id="f-heartRate" min="30" max="220" step="1" inputmode="numeric" placeholder="72" />
+        </label>
+        <label class="field">Weight (kg)
+          <input type="number" id="f-weight" min="20" max="400" step="0.1" inputmode="decimal" placeholder="70.0" />
+        </label>
+        <label class="field">Systolic (mmHg)
+          <input type="number" id="f-systolic" min="70" max="260" step="1" inputmode="numeric" placeholder="120" />
+        </label>
+        <label class="field">Diastolic (mmHg)
+          <input type="number" id="f-diastolic" min="40" max="160" step="1" inputmode="numeric" placeholder="80" />
+        </label>
+        <label class="field">Sleep (hours)
+          <input type="number" id="f-sleepHours" min="0" max="24" step="0.25" inputmode="decimal" placeholder="8" />
+        </label>
+        <label class="field">Water (glasses)
+          <input type="number" id="f-waterGlasses" min="0" max="30" step="1" inputmode="numeric" placeholder="8" />
+        </label>
+        <label class="field span-2">Steps
+          <input type="number" id="f-steps" min="0" max="100000" step="1" inputmode="numeric" placeholder="10000" />
+        </label>
+        <label class="field span-2">Mood
+          <select id="f-mood">
+            <option value="">—</option>
+            <option value="great">🤩 Great</option>
+            <option value="good">🙂 Good</option>
+            <option value="ok">😐 Okay</option>
+            <option value="low">😕 Low</option>
+            <option value="bad">😞 Bad</option>
+          </select>
+        </label>
+        <label class="field span-2">Notes
+          <textarea id="f-notes" rows="2" maxlength="280" placeholder="How are you feeling today?"></textarea>
+        </label>
+      </div>
+      <p id="form-error" class="form-error" hidden></p>
+      <footer class="dialog-actions">
+        <button type="button" class="btn btn-ghost" id="cancel-btn">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="save-btn">Save entry</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <div id="toast-container" aria-live="polite"></div>
+
+  <footer class="app-footer container">
+    Built with ❤️ · Your data never leaves this browser.
+  </footer>
+
+  <script src="vendor/chart.umd.min.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
+
